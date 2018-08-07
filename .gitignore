@@ -1,3 +1,5 @@
 crdprovenance
 artifacts/simple-example/kube-crdprovenance-apiserver
 vendor
+crd-kube-provenance
+provenance-deployment.yaml

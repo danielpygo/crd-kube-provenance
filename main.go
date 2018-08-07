@@ -7,7 +7,7 @@ import (
 
 	genericapiserver "k8s.io/apiserver/pkg/server"
 	"k8s.io/apiserver/pkg/util/logs"
-	"github.com/cloud-ark/crdprovenance/pkg/cmd/server"
+	"github.com/crd-kube-provenance/pkg/cmd/server"
 )
 
 func main() {

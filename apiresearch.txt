@@ -1,0 +1,103 @@
+dan@nad:~/goworkspace3/src/github.com/crd-kube-provenance$ curl http://localhost:8080/apis/apiextensions.k8s.io/v1beta1/customresourcedefinitions/
+{
+  "kind": "CustomResourceDefinitionList",
+  "apiVersion": "apiextensions.k8s.io/v1beta1",
+  "metadata": {
+    "selfLink": "/apis/apiextensions.k8s.io/v1beta1/customresourcedefinitions/",
+    "resourceVersion": "2833"
+  },
+  "items": [
+    {
+      "metadata": {
+        "name": "postgreses.postgrescontroller.kubeplus",
+        "selfLink": "/apis/apiextensions.k8s.io/v1beta1/customresourcedefinitions/postgreses.postgrescontroller.kubeplus",
+        "uid": "84993b95-9a8a-11e8-a1a9-080027b0491f",
+        "resourceVersion": "1614",
+        "generation": 1,
+        "creationTimestamp": "2018-08-07T21:40:35Z"
+      },
+      "spec": {
+        "group": "postgrescontroller.kubeplus",
+        "version": "v1",
+        "names": {
+          "plural": "postgreses",
+          "singular": "postgres",
+          "kind": "Postgres",
+          "listKind": "PostgresList"
+        },
+        "scope": "Namespaced"
+      },
+      "status": {
+        "conditions": [
+          {
+            "type": "NamesAccepted",
+            "status": "True",
+            "lastTransitionTime": "2018-08-07T21:40:35Z",
+            "reason": "NoConflicts",
+            "message": "no conflicts found"
+          },
+          {
+            "type": "Established",
+            "status": "True",
+            "lastTransitionTime": "2018-08-07T21:40:35Z",
+            "reason": "InitialNamesAccepted",
+            "message": "the initial names have been accepted"
+          }
+        ],
+        "acceptedNames": {
+          "plural": "postgreses",
+          "singular": "postgres",
+          "kind": "Postgres",
+          "listKind": "PostgresList"
+        }
+      }
+    }
+  ]
+
+
+ curl http://localhos:8080/apis/postgrescontroller.kubeplus/v1/namespaces/default/postgreses/client25
+{"apiVersion":"postgrescontroller.kubeplus/v1","kind":"Postgres","metadata":{"annotations":{"kubectl.kubernetes.io/last-applied-configuration":"{\"apiVersion\":\"postgrescontroller.kubeplus/v1\",\"kind\":\"Postgres\",\"metadata\":{\"annotations\":{},\"name\":\"client25\",\"namespace\":\"default\"},\"spec\":{\"databases\":[\"moodle\"],\"deploymentName\":\"client25\",\"image\":\"postgres:9.3\",\"initcommands\":[\"create table moodle_data1 (items varchar(250));\",\"insert into moodle_data1 (items) values ('Moodle data1');\",\"insert into moodle_data1 (items) values ('Moodle data1');\",\"insert into moodle_data1 (items) values ('Moodle data2');\",\"GRANT ALL PRIVILEGES ON TABLE moodle_data1 TO devdatta;\",\"GRANT ALL PRIVILEGES ON TABLE moodle_data1 TO pallavi;\"],\"replicas\":1,\"users\":[{\"password\":\"pass123\",\"username\":\"devdatta\"},{\"password\":\"pass234\",\"username\":\"pallavi\"}]}}\n"},"clusterName":"","creationTimestamp":"2018-08-07T22:11:04Z","generation":1,"name":"client25","namespace":"default","resourceVersion":"3699","selfLink":"/apis/postgrescontroller.kubeplus/v1/namespaces/default/postgreses/client25","uid":"c6fcb102-9a8e-11e8-a1a9-080027b0491f"},"spec":{"databases":["moodle"],"deploymentName":"client25","image":"postgres:9.3","initcommands":["create table moodle_data1 (items varchar(250));","insert into moodle_data1 (items) values ('Moodle data1');","insert into moodle_data1 (items) values ('Moodle data1');","insert into moodle_data1 (items) values ('Moodle data2');","GRANT ALL PRIVILEGES ON TABLE moodle_data1 TO devdatta;","GRANT ALL PRIVILEGES ON TABLE moodle_data1 TO pallavi;"],"replicas":1,"users":[{"password":"pass123","username":"devdatta"},{"password":"pass234","username":"pallavi"}]}}
+>>formatted to:
+{  
+   "apiVersion":"postgrescontroller.kubeplus/v1",
+   "kind":"Postgres",
+   "metadata":{  
+      "annotations":{  
+         "kubectl.kubernetes.io/last-applied-configuration":"{\"apiVersion\":\"postgrescontroller.kubeplus/v1\",\"kind\":\"Postgres\",\"metadata\":{\"annotations\":{},\"name\":\"client25\",\"namespace\":\"default\"},\"spec\":{\"databases\":[\"moodle\"],\"deploymentName\":\"client25\",\"image\":\"postgres:9.3\",\"initcommands\":[\"create table moodle_data1 (items varchar(250));\",\"insert into moodle_data1 (items) values ('Moodle data1');\",\"insert into moodle_data1 (items) values ('Moodle data1');\",\"insert into moodle_data1 (items) values ('Moodle data2');\",\"GRANT ALL PRIVILEGES ON TABLE moodle_data1 TO devdatta;\",\"GRANT ALL PRIVILEGES ON TABLE moodle_data1 TO pallavi;\"],\"replicas\":1,\"users\":[{\"password\":\"pass123\",\"username\":\"devdatta\"},{\"password\":\"pass234\",\"username\":\"pallavi\"}]}}\n"
+      },
+      "clusterName":"",
+      "creationTimestamp":"2018-08-07T22:11:04Z",
+      "generation":1,
+      "name":"client25",
+      "namespace":"default",
+      "resourceVersion":"3699",
+      "selfLink":"/apis/postgrescontroller.kubeplus/v1/namespaces/default/postgreses/client25",
+      "uid":"c6fcb102-9a8e-11e8-a1a9-080027b0491f"
+   },
+   "spec":{  
+      "databases":[  
+         "moodle"
+      ],
+      "deploymentName":"client25",
+      "image":"postgres:9.3",
+      "initcommands":[  
+         "create table moodle_data1 (items varchar(250));",
+         "insert into moodle_data1 (items) values ('Moodle data1');",
+         "insert into moodle_data1 (items) values ('Moodle data1');",
+         "insert into moodle_data1 (items) values ('Moodle data2');",
+         "GRANT ALL PRIVILEGES ON TABLE moodle_data1 TO devdatta;",
+         "GRANT ALL PRIVILEGES ON TABLE moodle_data1 TO pallavi;"
+      ],
+      "replicas":1,
+      "users":[  
+         {  
+            "password":"pass123",
+            "username":"devdatta"
+         },
+         {  
+            "password":"pass234",
+            "username":"pallavi"
+         }
+      ]
+   }
+}
