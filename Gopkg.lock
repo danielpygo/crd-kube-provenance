@@ -29,15 +29,6 @@
   revision = "3ac7bf7a47d159a033b107610db8a1b6575507a4"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/cloud-ark/kubeprovenance"
-  packages = [
-    "pkg/apiserver",
-    "pkg/provenance"
-  ]
-  revision = "93a7435d9eaae3e762cc1d4c4523bac2f352207f"
-
-[[projects]]
   name = "github.com/coreos/etcd"
   packages = [
     "auth/authpb",
@@ -716,6 +707,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ba8328a0802a970b4a1368b2087c8911cd6f4dee61b9c389a243b2cb90e0f35f"
+  inputs-digest = "6d0b3d80dc6ce09548d3de84f2e8e68ead7ccf29e90b2b96295415a35d801877"
   solver-name = "gps-cdcl"
   solver-version = 1

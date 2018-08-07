@@ -1,5 +1,4 @@
-crdprovenance
-artifacts/simple-example/kube-crdprovenance-apiserver
-vendor
+artifacts/simple-image/kube-crdprovenance-apiserver
 crd-kube-provenance
-provenance-deployment.yaml
+vendor
+apiserver.local.config

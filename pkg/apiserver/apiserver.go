@@ -2,30 +2,27 @@ package apiserver
 
 import (
 	"fmt"
-	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/version"
 	genericapiserver "k8s.io/apiserver/pkg/server"
-	"github.com/emicklei/go-restful"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
 
+	"github.com/crd-kube-provenance/pkg/provenance"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"log"
-	"github.com/cloud-ark/kubeprovenance/pkg/provenance"
 )
 
 const GroupName = "kubeprovenance.cloudark.io"
 const GroupVersion = "v1"
 
 var (
-	Scheme = runtime.NewScheme()
-	Codecs = serializer.NewCodecFactory(Scheme)
-	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
-	AddToScheme   = SchemeBuilder.AddToScheme
-    SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: GroupVersion}
+	Scheme             = runtime.NewScheme()
+	Codecs             = serializer.NewCodecFactory(Scheme)
+	SchemeBuilder      = runtime.NewSchemeBuilder(addKnownTypes)
+	AddToScheme        = SchemeBuilder.AddToScheme
+	SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: GroupVersion}
 )
 
 func addKnownTypes(scheme *runtime.Scheme) error {
@@ -40,7 +37,7 @@ func init() {
 	utilruntime.Must(Scheme.SetVersionPriority(SchemeGroupVersion))
 
 	// TODO(devdattakulkarni) -- Following comments coming from sample-apiserver.
-	// Leaving them for now. 
+	// Leaving them for now.
 	// we need to add the options to empty v1
 	// TODO fix the server code to avoid this
 	metav1.AddToGroupVersion(Scheme, schema.GroupVersion{Version: GroupVersion})
@@ -61,7 +58,7 @@ func init() {
 	// Start collecting provenance
 	fmt.Println("hellooooooooooooooooooo")
 	go provenance.CollectProvenance(done)
-//	<-done
+	//	<-done
 }
 
 type ExtraConfig struct {
@@ -120,7 +117,7 @@ func (c completedConfig) New() (*ProvenanceServer, error) {
 		return nil, err
 	}
 
-//	installCompositionProvenanceWebService(s)
+	//	installCompositionProvenanceWebService(s)
 
 	return s, nil
 }

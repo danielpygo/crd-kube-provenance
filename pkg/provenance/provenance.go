@@ -2,12 +2,13 @@ package provenance
 
 import (
 	"encoding/json"
+	"log"
 	"os"
 	"strings"
 	//"log"
-	"time"
 	"fmt"
 	"io/ioutil"
+	"time"
 	//      "strings"
 	//      "io/ioutil"
 	//      "log"
@@ -15,10 +16,14 @@ import (
 	//      "context"
 	//      "gopkg.in/yaml.v2"
 	"bufio"
-	"net/http"
+	"crypto/tls"
 	cert "crypto/x509"
+	"net/http"
+	"net/url"
+
 	"k8s.io/apiserver/pkg/apis/audit/v1beta1"
 )
+
 type User struct {
 	Password string
 	Username string
@@ -71,88 +76,21 @@ func init() {
 	debug = true
 }
 func CollectProvenance(done chan bool) {
-	      for {
+	for {
 		//requestObjects := parse(done)
-	//saveProvenanceInformation(requestObjects)
+		//saveProvenanceInformation(requestObjects)
 		fmt.Println("collecting")
-	        time.Sleep(time.Second * 5 )
-	      }
-//	done <- true
+		time.Sleep(time.Second * 5)
+	}
+	//	done <- true
 }
 
 //change to save in etcd pod
 //need to change to update based on stream of events
 func saveProvenanceInformation(requestObjects []RequestObject) {
-	for _, obj := range requestObjects {
-		dbCount := provenance.NumDatabases
-		userCount := provenance.NumDatabases
-		reqDBCount := len(obj.Specs.Databases)
-		reqUserCount := len(obj.Specs.Users)
-		var typeOfRequest string
-		//the json object gives no indication as per what
-		//yaml request was called so have to figure it out based
-		//on the spec
-		switch {
-		case dbCount == 0 && userCount == 0:
-			typeOfRequest = "initialize-db"
-		case dbCount < reqDBCount && reqUserCount == 0:
-			typeOfRequest = "add-db"
-		case dbCount > reqDBCount && reqUserCount == 0:
-			typeOfRequest = "delete-db"
-		case reqDBCount == 0 && userCount < reqUserCount:
-			typeOfRequest = "add-user"
-		case reqDBCount == 0 && userCount > reqUserCount:
-			typeOfRequest = "delete-user"
-		case dbCount == reqDBCount && userCount == reqUserCount:
-			typeOfRequest = "modify-password"
-		}
-		switch typeOfRequest {
-		case "initialize-db":
-			for _, database := range obj.Specs.Databases {
-				provenance.Databases = append(provenance.Databases, database)
-			}
-			for _, user := range obj.Specs.Users {
-				provenance.UserToPassword[user.Username] = user.Password
-			}
-		case "delete-db", "add-db":
-			provenance.Databases = obj.Specs.Databases
-		case "add-user":
-			for _, user := range obj.Specs.Users {
-				forAdd := false
-				if _, ok := provenance.UserToPassword[user.Username]; !ok {
-					forAdd = true
-				}
-				if forAdd {
-					provenance.UserToPassword[user.Username] = user.Password
-					provenance.UserToPasswordChanged[user.Username] = 0
-				}
-			}
-		case "delete-user":
-			for key, _ := range provenance.UserToPassword {
-				forDelete := true
-				for _, user := range obj.Specs.Users {
-					if key == user.Username {
-						forDelete = false
-					}
-				}
-				if forDelete {
-					delete(provenance.UserToPassword, key)
-					delete(provenance.UserToPasswordChanged, key)
-				}
-			}
-		case "modify-password":
-			for key, value := range provenance.UserToPassword {
-				for _, user := range obj.Specs.Users {
-					if key == user.Username && value != user.Password {
-						provenance.UserToPassword[key] = user.Password
-						provenance.UserToPasswordChanged[key] += 1
-					}
-				}
-			}
-		}
-		provenance.NumDatabases = len(provenance.Databases)
-		provenance.NumUsers = len(provenance.UserToPassword)
-	}
+	// for _, obj := range requestObjects {
+	//
+	// }
 }
 func (r *RequestObject) String() string {
 	var b strings.Builder
@@ -192,14 +130,11 @@ func (p *ProvenanceInfo) String() string {
 
 //Ref:https://www.sohamkamani.com/blog/2017/10/18/parsing-json-in-golang/#unstructured-data
 func parse(done chan bool) []RequestObject {
-	f, err := os.Create("/tmp/crdprovenance-output.txt")
-	defer f.Close()
-	w := bufio.NewWriter(f)
-	w.WriteString("Output of crdprovenance\n")
+	fmt.Println("PARSING")
 
 	if _, err := os.Stat("/tmp/kube-apiserver-audit.log"); os.IsNotExist(err) {
 		if debug {
-			w.WriteString(fmt.Sprintf("could not stat the path %s", err))
+			fmt.Println(fmt.Sprintf("could not stat the path %s", err))
 		}
 		done <- true
 		panic(err)
@@ -207,53 +142,36 @@ func parse(done chan bool) []RequestObject {
 	log, err := os.Open("/tmp/kube-apiserver-audit.log")
 	if err != nil {
 		if debug {
-			w.WriteString(fmt.Sprintf("could not open the log file %s", err))
+			fmt.Println(fmt.Sprintf("could not open the log file %s", err))
 		}
 		panic(err)
 		done <- true
 	}
 	defer log.Close()
 
-	// var events []Event
 	var reqs []RequestObject
 
 	scanner := bufio.NewScanner(log)
 	for scanner.Scan() {
+
 		eventJson := scanner.Bytes()
 
 		var event Event
 		err := json.Unmarshal(eventJson, &event)
 		if err != nil {
 			s := fmt.Sprintf("Problem parsing event object's json %s", err)
-			w.WriteString(s)
+			fmt.Println(s)
 		}
 
 		requestobj := event.RequestObject
 
 		req := ParseRequestObject(requestobj.Raw)
 		reqs = append(reqs, req)
-		if debug {
-			w.WriteString("******************************\n")
-			requestJSON, err := json.MarshalIndent(req, "", "    ")
-
-			if err != nil {
-				w.WriteString(fmt.Sprintf("error parsing into Event struct %s", err))
-			}
-			// events = append(events, event)
-
-			eventJSON, err := json.MarshalIndent(event, "", "    ")
-			if err != nil {
-				w.WriteString("error parsing into Event struct")
-			}
-			w.Write(requestJSON)
-			w.Write(eventJSON)
-			w.WriteString("******************************\n")
-			w.Flush()
-		}
 	}
 	if err := scanner.Err(); err != nil {
 		panic(err)
 	}
+	fmt.Println("DONE PARSING")
 
 	return reqs
 }
@@ -294,46 +212,45 @@ func ParseRequestObject(requestObjBytes []byte) RequestObject {
 	return parsedRequest
 }
 
-//func getResourceListContent(resourceApiVersion, resourcePlural string) []byte {
-	//fmt.Println("Entering getResourceListContent")
-//        f, err := os.Create("/tmp/provenance-output.txt")
-//	log.SetOutput(f)
-//	log.Println("hello")
-//	url1 := fmt.Sprintf("https://%s:%s/%s/namespaces/%s/%s", serviceHost, servicePort, resourceApiVersion, Namespace, resourcePlural)
-	//fmt.Printf("Url:%s\n",url1)
-//	caToken := getToken()
-//	caCertPool := getCACert()
-//	u, err := url.Parse(url1)
-//	if err != nil {
-//		panic(err)
-//	}
-//	req, err := http.NewRequest(httpMethod, u.String(), nil)
-//	if err != nil {
-//		fmt.Println(err)
-//	}
-//	req.Header.Set("Content-Type", "application/json")
-//	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", string(caToken)))
-//	client := &http.Client{
-//		Transport: &http.Transport{
-//			TLSClientConfig: &tls.Config{
-//				RootCAs: caCertPool,
-//			},
-//		},
-//	}
-//	resp, err := client.Do(req)
-//	if err != nil {
-//		log.Printf("sending request failed: %s", err.Error())
-//		fmt.Println(err)
-//	}
-//	defer resp.Body.Close()
-//	resp_body, _ := ioutil.ReadAll(resp.Body)
-//
-//	//fmt.Println(resp.Status)
-	//fmt.Println(string(resp_body))
-	//fmt.Println("Exiting getResourceListContent")
-//	return resp_body
-//}
+func getResourceListContent(resourceApiVersion, resourcePlural string) []byte {
+	fmt.Println("Entering getResourceListContent")
+	f, err := os.Create("/tmp/provenance-output.txt")
+	log.SetOutput(f)
+	log.Println("hello")
+	url1 := fmt.Sprintf("https://%s:%s/%s/namespaces/%s/%s", serviceHost, servicePort, resourceApiVersion, Namespace, resourcePlural)
+	fmt.Printf("Url:%s\n", url1)
+	caToken := getToken()
+	caCertPool := getCACert()
+	u, err := url.Parse(url1)
+	if err != nil {
+		panic(err)
+	}
+	req, err := http.NewRequest(httpMethod, u.String(), nil)
+	if err != nil {
+		fmt.Println(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", string(caToken)))
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs: caCertPool,
+			},
+		},
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("sending request failed: %s", err.Error())
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+	resp_body, _ := ioutil.ReadAll(resp.Body)
 
+	//fmt.Println(resp.Status)
+	fmt.Println(string(resp_body))
+	fmt.Println("Exiting getResourceListContent")
+	return resp_body
+}
 
 // Ref:https://stackoverflow.com/questions/30690186/how-do-i-access-the-kubernetes-api-from-within-a-pod-container
 func getToken() []byte {
@@ -356,4 +273,3 @@ func getCACert() *cert.CertPool {
 	caCertPool.AppendCertsFromPEM(caCert)
 	return caCertPool
 }
-
