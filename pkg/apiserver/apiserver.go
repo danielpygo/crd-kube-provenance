@@ -13,7 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-
+	"log"
 	"github.com/cloud-ark/kubeprovenance/pkg/provenance"
 )
 
@@ -57,9 +57,11 @@ func init() {
 		&metav1.APIResourceList{},
 	)
 	done := make(chan bool, 1)
+	//byts := provenance.getResourceListContent("", "Postgreses")
 	// Start collecting provenance
+	fmt.Println("hellooooooooooooooooooo")
 	go provenance.CollectProvenance(done)
-	<-done
+//	<-done
 }
 
 type ExtraConfig struct {

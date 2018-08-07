@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"os"
 	"strings"
-	//      "time"
+	//"log"
+	"time"
 	"fmt"
-	//        "io/ioutil"
+	"io/ioutil"
 	//      "strings"
 	//      "io/ioutil"
 	//      "log"
@@ -15,36 +16,9 @@ import (
 	//      "gopkg.in/yaml.v2"
 	"bufio"
 	"net/http"
-
+	cert "crypto/x509"
 	"k8s.io/apiserver/pkg/apis/audit/v1beta1"
 )
-
-// type RequestSpec struct {
-// 	Databases      []string `json:"databases,omitempty"`
-// 	DeploymentName string   `json:"deploymentName,omitempty"`
-// 	Image          string   `json:"image,omitempty"`
-// 	Replicas       int      `json:"replicas,omitempty"`
-// 	Users          []User   `json:"users,omitempty"`
-// }
-// type Annotation2 struct {
-// }
-// type ConfigMetadata struct {
-// 	annotations Annotation2 `json:"annotations,omitempty"`
-// 	Name        string      `json:"name,omitempty"`
-// 	Namespace   string      `json:"namespace,omitempty"`
-// }
-// type Metadata struct {
-// 	Annotation Annotations `json:"annotations,omitempty"`
-// }
-// type Configuration struct {
-// 	// ApiVersion string         `json:"apiVersion,omitempty"`
-// 	// Kind       string         `json:"kind,omitempty"`
-// 	// Metadata ConfigMetadata `json:"metadata,omitempty"`
-// 	// Spec     RequestSpec    `json:"spec,omitempty"`
-// }
-// type Annotations struct {
-// 	Config Configuration `json:"kubectl.kubernetes.io/last-applied-configuration,omitempty"`
-// }
 type User struct {
 	Password string
 	Username string
@@ -96,20 +70,14 @@ func init() {
 		NumUsers:              0}
 	debug = true
 }
-func main() {
-	done := make(chan bool, 1)
-	go CollectProvenance(done)
-	<-done
-
-}
 func CollectProvenance(done chan bool) {
-	//      for {
-	requestObjects := parse(done)
-	saveProvenanceInformation(requestObjects)
-	fmt.Println(provenance.String())
-	//              time.Sleep(time.Second * 60 )
-	//      }
-	done <- true
+	      for {
+		//requestObjects := parse(done)
+	//saveProvenanceInformation(requestObjects)
+		fmt.Println("collecting")
+	        time.Sleep(time.Second * 5 )
+	      }
+//	done <- true
 }
 
 //change to save in etcd pod
@@ -324,5 +292,68 @@ func ParseRequestObject(requestObjBytes []byte) RequestObject {
 	}
 	fmt.Println("exiting parse request")
 	return parsedRequest
+}
+
+//func getResourceListContent(resourceApiVersion, resourcePlural string) []byte {
+	//fmt.Println("Entering getResourceListContent")
+//        f, err := os.Create("/tmp/provenance-output.txt")
+//	log.SetOutput(f)
+//	log.Println("hello")
+//	url1 := fmt.Sprintf("https://%s:%s/%s/namespaces/%s/%s", serviceHost, servicePort, resourceApiVersion, Namespace, resourcePlural)
+	//fmt.Printf("Url:%s\n",url1)
+//	caToken := getToken()
+//	caCertPool := getCACert()
+//	u, err := url.Parse(url1)
+//	if err != nil {
+//		panic(err)
+//	}
+//	req, err := http.NewRequest(httpMethod, u.String(), nil)
+//	if err != nil {
+//		fmt.Println(err)
+//	}
+//	req.Header.Set("Content-Type", "application/json")
+//	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", string(caToken)))
+//	client := &http.Client{
+//		Transport: &http.Transport{
+//			TLSClientConfig: &tls.Config{
+//				RootCAs: caCertPool,
+//			},
+//		},
+//	}
+//	resp, err := client.Do(req)
+//	if err != nil {
+//		log.Printf("sending request failed: %s", err.Error())
+//		fmt.Println(err)
+//	}
+//	defer resp.Body.Close()
+//	resp_body, _ := ioutil.ReadAll(resp.Body)
+//
+//	//fmt.Println(resp.Status)
+	//fmt.Println(string(resp_body))
+	//fmt.Println("Exiting getResourceListContent")
+//	return resp_body
+//}
+
+
+// Ref:https://stackoverflow.com/questions/30690186/how-do-i-access-the-kubernetes-api-from-within-a-pod-container
+func getToken() []byte {
+	caToken, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
+	if err != nil {
+		panic(err) // cannot find token file
+	}
+	//fmt.Printf("Token:%s", caToken)
+	return caToken
+}
+
+// Ref:https://stackoverflow.com/questions/30690186/how-do-i-access-the-kubernetes-api-from-within-a-pod-container
+func getCACert() *cert.CertPool {
+	caCertPool := cert.NewCertPool()
+	caCert, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")
+	if err != nil {
+		panic(err) // Can't find cert file
+	}
+	//fmt.Printf("CaCert:%s",caCert)
+	caCertPool.AppendCertsFromPEM(caCert)
+	return caCertPool
 }
 
