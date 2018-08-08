@@ -2,6 +2,7 @@ package apiserver
 
 import (
 	"fmt"
+	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -11,6 +12,7 @@ import (
 	genericapiserver "k8s.io/apiserver/pkg/server"
 
 	"github.com/crd-kube-provenance/pkg/provenance"
+	restful "github.com/emicklei/go-restful"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 )
 
@@ -122,42 +124,40 @@ func (c completedConfig) New() (*ProvenanceServer, error) {
 	return s, nil
 }
 
-//func installCompositionProvenanceWebService(provenanceServer *ProvenanceServer) {
-//	for _, resourceKindPlural := range provenance.KindPluralMap {
-//		namespaceToUse := provenance.Namespace
-//		path := "/apis/" + GroupName + "/" + GroupVersion + "/namespaces/"
-//		path = path + namespaceToUse + "/" + strings.ToLower(resourceKindPlural)
-//		fmt.Println("WS PATH:" + path)
-//		ws := getWebService()
-//		ws.Path(path).
-//			Consumes(restful.MIME_JSON, restful.MIME_XML).
-//			Produces(restful.MIME_JSON, restful.MIME_XML)
-//		getPath := "/{resource-id}/compositions"
-//		ws.Route(ws.GET(getPath).To(getCompositions))
-//		provenanceServer.GenericAPIServer.Handler.GoRestfulContainer.Add(ws)
-//	}
-//}
+func installCompositionProvenanceWebService(provenanceServer *ProvenanceServer) {
+	namespaceToUse := provenance.Namespace
+	path := "/apis/" + GroupName + "/" + GroupVersion + "/namespaces/"
+	path = path + namespaceToUse + "/" + strings.ToLower(resourceKindPlural)
+	fmt.Println("WS PATH:" + path)
+	ws := getWebService()
+	ws.Path(path).
+		Consumes(restful.MIME_JSON, restful.MIME_XML).
+		Produces(restful.MIME_JSON, restful.MIME_XML)
+	getPath := "/{resource-id}/compositions"
+	ws.Route(ws.GET(getPath).To(getCompositions))
+	provenanceServer.GenericAPIServer.Handler.GoRestfulContainer.Add(ws)
+}
 
-//func getWebService() *restful.WebService {
-//	ws := new(restful.WebService)
-//	ws.Path("/apis")
-//	ws.Consumes("*/*")
-//	ws.Produces(restful.MIME_JSON, restful.MIME_XML)
-//	ws.ApiVersion(GroupName)
-//	return ws
-//}
+func getWebService() *restful.WebService {
+	ws := new(restful.WebService)
+	ws.Path("/apis")
+	ws.Consumes("*/*")
+	ws.Produces(restful.MIME_JSON, restful.MIME_XML)
+	ws.ApiVersion(GroupName)
+	return ws
+}
 
-//func getCompositions(request *restful.Request, response *restful.Response) {
-//	resourceName := request.PathParameter("resource-id")
-//	requestPath := request.Request.URL.Path
-//	//fmt.Printf("Printing Provenance\n")
-//	//provenance.TotalClusterProvenance.PrintProvenance()
-//
-//	// Path looks as follows:
-//	// /apis/kubeprovenance.cloudark.io/v1/namespaces/default/deployments/dep1/compositions
-//	resourcePathSlice := strings.Split(requestPath, "/")
-//	resourceKind := resourcePathSlice[6] // Kind is 7th element in the slice
-//	provenanceInfo := provenance.TotalClusterProvenance.GetProvenance(resourceKind, resourceName)
-//
-//	response.Write([]byte(provenanceInfo))
-//}
+func getCompositions(request *restful.Request, response *restful.Response) {
+	resourceName := request.PathParameter("resource-id")
+	requestPath := request.Request.URL.Path
+	//fmt.Printf("Printing Provenance\n")
+	//provenance.TotalClusterProvenance.PrintProvenance()
+
+	// Path looks as follows:
+	// /apis/kubeprovenance.cloudark.io/v1/namespaces/default/deployments/dep1/compositions
+	resourcePathSlice := strings.Split(requestPath, "/")
+	resourceKind := resourcePathSlice[6] // Kind is 7th element in the slice
+	provenanceInfo := provenance.ObjectFullProvenance.FullDiff(3, 4)
+
+	response.Write([]byte(provenanceInfo))
+}
