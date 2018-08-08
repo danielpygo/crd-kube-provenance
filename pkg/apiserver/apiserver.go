@@ -117,13 +117,13 @@ func (c completedConfig) New() (*ProvenanceServer, error) {
 		return nil, err
 	}
 
-	//	installCompositionProvenanceWebService(s)
+	installCompositionProvenanceWebService(s)
 
 	return s, nil
 }
 
 func installCompositionProvenanceWebService(provenanceServer *ProvenanceServer) {
-	namespaceToUse := provenance.Namespace
+	namespaceToUse := "provenance"
 	path := "/apis/" + GroupName + "/" + GroupVersion + "/namespaces/"
 	path = path + namespaceToUse + "/" + strings.ToLower("postgreses")
 	fmt.Println("WS PATH:" + path)
@@ -131,7 +131,7 @@ func installCompositionProvenanceWebService(provenanceServer *ProvenanceServer) 
 	ws.Path(path).
 		Consumes(restful.MIME_JSON, restful.MIME_XML).
 		Produces(restful.MIME_JSON, restful.MIME_XML)
-	getPath := "/Diff"
+	getPath := "/diff"
 	ws.Route(ws.GET(getPath).To(getFullDiff))
 	provenanceServer.GenericAPIServer.Handler.GoRestfulContainer.Add(ws)
 }
