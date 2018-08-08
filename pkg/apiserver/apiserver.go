@@ -55,11 +55,9 @@ func init() {
 		&metav1.APIGroup{},
 		&metav1.APIResourceList{},
 	)
-	done := make(chan bool, 1)
 	//byts := provenance.getResourceListContent("", "Postgreses")
 	// Start collecting provenance
-	fmt.Println("hellooooooooooooooooooo")
-	go provenance.CollectProvenance(done)
+	go provenance.CollectProvenance()
 	//	<-done
 }
 
@@ -127,14 +125,14 @@ func (c completedConfig) New() (*ProvenanceServer, error) {
 func installCompositionProvenanceWebService(provenanceServer *ProvenanceServer) {
 	namespaceToUse := provenance.Namespace
 	path := "/apis/" + GroupName + "/" + GroupVersion + "/namespaces/"
-	path = path + namespaceToUse + "/" + strings.ToLower(resourceKindPlural)
+	path = path + namespaceToUse + "/" + strings.ToLower("postgreses")
 	fmt.Println("WS PATH:" + path)
 	ws := getWebService()
 	ws.Path(path).
 		Consumes(restful.MIME_JSON, restful.MIME_XML).
 		Produces(restful.MIME_JSON, restful.MIME_XML)
-	getPath := "/{resource-id}/compositions"
-	ws.Route(ws.GET(getPath).To(getCompositions))
+	getPath := "/Diff"
+	ws.Route(ws.GET(getPath).To(getFullDiff))
 	provenanceServer.GenericAPIServer.Handler.GoRestfulContainer.Add(ws)
 }
 
@@ -147,16 +145,16 @@ func getWebService() *restful.WebService {
 	return ws
 }
 
-func getCompositions(request *restful.Request, response *restful.Response) {
-	resourceName := request.PathParameter("resource-id")
-	requestPath := request.Request.URL.Path
+func getFullDiff(request *restful.Request, response *restful.Response) {
+	// resourceName := request.PathParameter("resource-id")
+	// requestPath := request.Request.URL.Path
 	//fmt.Printf("Printing Provenance\n")
 	//provenance.TotalClusterProvenance.PrintProvenance()
 
 	// Path looks as follows:
 	// /apis/kubeprovenance.cloudark.io/v1/namespaces/default/deployments/dep1/compositions
-	resourcePathSlice := strings.Split(requestPath, "/")
-	resourceKind := resourcePathSlice[6] // Kind is 7th element in the slice
+	// resourcePathSlice := strings.Split(requestPath, "/")
+	// resourceKind := resourcePathSlice[6] // Kind is 7th element in the slice
 	provenanceInfo := provenance.ObjectFullProvenance.FullDiff(3, 4)
 
 	response.Write([]byte(provenanceInfo))
